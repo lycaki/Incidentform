@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Reporting System</title>
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Incident Report">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#4badd1">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4badd1, #3978a8);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.1) 40%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.1) 60%,
+                rgba(255, 255, 255, 0.1) 100%
+            );
+            transform: rotate(30deg);
+            opacity: 0.3;
+        }
+        
+        .header-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .tab-container {
+            display: flex;
+            overflow-x: auto;
+            background-color: white;
+            border-bottom: 1px solid #ccc;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            scrollbar-width: none; /* Firefox */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .tab-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
+        }
+        
+        .tab {
+            padding: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 14px;
+            border-right: 1px solid #eee;
+            background-color: #f8f8f8;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .tab i {
+            margin-right: 6px;
+            font-size: 1rem;
+        }
+        
+        .tab.active {
+            background-color: #4badd1;
+            color: white;
+            border-bottom: none;
+        }
+        
+        .tab:active {
+            background-color: #e6e6e6;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: white;
+            border-radius: 4px;
+            margin: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #444;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #4badd1;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(75, 173, 209, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group input[readonly], .form-group select[readonly] {
+            background-color: #f8f8f8;
+            cursor: not-allowed;
+        }
+        
+        .form-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .form-col {
+            flex: 1;
+            padding-right: 10px;
+        }
+        
+        .form-col:last-child {
+            padding-right: 0;
+        }
+        
+        .date-time-group {
+            display: flex;
+        }
+        
+        .date-time-group input, .date-time-group select {
+            margin-right: 5px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            width: 50%;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-item input {
+            width: auto;
+            margin-right: 5px;
+            accent-color: #4badd1;
+            height: 16px;
+            width: 16px;
+        }
+        
+        .checkbox-item label {
+            display: inline;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            background-color: #4badd1;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .submit-btn:hover {
+            background-color: #3d9cba;
+        }
+        
+        .submit-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .submit-btn i {
+            margin-right: 8px;
+        }
+        
+        .required:after {
+            content: "*";
+            color: #e53e3e;
+            margin-left: 4px;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .file-upload:hover {
+            border-color: #4badd1;
+            background-color: rgba(75, 173, 209, 0.05);
+        }
+        
+        .file-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-upload i {
+            font-size: 2.5rem;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-text {
+            text-align: center;
+            color: #666;
+        }
+        
+        .file-upload-text strong {
+            color: #4badd1;
+            text-decoration: underline;
+        }
+        
+        .file-preview {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .file-item {
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+            background: white;
+        }
+        
+        .file-item .file-icon {
+            font-size: 2rem;
+            color: #4badd1;
+            margin-bottom: 5px;
+        }
+        
+        .file-item .file-name {
+            font-size: 12px;
+            text-align: center;
+            word-break: break-word;
+        }
+        
+        .file-item .remove-file {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e53e3e;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        /* Card styling for lists */
+        .card-list {
+            margin-top: 15px;
+        }
+        
+        .card-item {
+            border: 1px solid #eee;
+            border-left: 3px solid #4badd1;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .card-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .card-item-title {
+            font-weight: bold;
+        }
+        
+        .card-item-content {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .card-item-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+        
+        .card-item-actions button {
+            background: #f1f1f1;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .card-item-actions button:hover {
+            background: #e5e5e5;
+        }
+        
+        /* Floating action button */
+        .floating-action {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #4badd1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .fab:hover {
+            background: #3d9cba;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .fab:active {
+            transform: translateY(1px);
+        }
+        
+        .fab i {
+            font-size: 24px;
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            padding: 15px 15px 5px 15px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #4badd1;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        .notification.error {
+            background-color: #e53e3e;
+        }
+        
+        .notification.warning {
+            background-color: #eab308;
+        }
+        
+        .notification i {
+            margin-right: 10px;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        /* Loading spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(75, 173, 209, 0.2);
+            border-left-color: #4badd1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-col {
+                padding-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .checkbox-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Incident Reporting System</h1>
+            <div class="header-subtitle">Record and track workplace incidents</div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab active" onclick="openTab(event, 'details')">
+                <i class="fas fa-clipboard-list"></i> Details
+            </div>
+            <div class="tab" onclick="openTab(event, 'witnesses')">
+                <i class="fas fa-user-friends"></i> Witnesses
+            </div>
+            <div class="tab" onclick="openTab(event, 'photos')">
+                <i class="fas fa-images"></i> Photos
+            </div>
+            <div class="tab" onclick="openTab(event, 'linked-files')">
+                <i class="fas fa-link"></i> Linked Files
+            </div>
+            <div class="tab" onclick="openTab(event, 'attached-files')">
+                <i class="fas fa-paperclip"></i> Attached Files
+            </div>
+            <div class="tab" onclick="openTab(event, 'external-resources')">
+                <i class="fas fa-globe"></i> Resources
+            </div>
+            <div class="tab" onclick="openTab(event, 'improvement-logs')">
+                <i class="fas fa-chart-line"></i> Improvements
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text">
+                <span>Form completion</span>
+                <span id="progress-percentage">0%</span>
+            </div>
+        </div>
+        
+        <form id="incident-form" onsubmit="submitForm(event)">
+            <!-- Details Tab -->
+            <div id="details" class="tab-content active">
+                <div class="form-group">
+                    <label for="incident-code" class="required">Incident Code</label>
+                    <input type="text" id="incident-code" value="Auto-Assigned" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="accident-book-no">Accident Book No.</label>
+                    <input type="text" id="accident-book-no">
+                </div>
+                
+                <div class="form-group">
+                    <label for="summary" class="required">Summary</label>
+                    <input type="text" id="summary" required placeholder="Brief description of the incident">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="incident-date" class="required">Date/Time of Incident</label>
+                        <div class="date-time-group">
+                            <input type="date" id="incident-date" required>
+                            <select id="incident-hour" required>
+                                <option value="00">00</option>
+                                <option value="01">01</option>
+                                <option value="02">02</option>
+                                <option value="03">03</option>
+                                <option value="04">04</option>
+                                <option value="05">05</option>
+                                <option value="06">06</option>
+                                <option value="07">07</option>
+                                <option value="08">08</option>
+                                <option value="09">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                            </select>
+                            <select id="incident-minute" required>
+                                <option value="00">00</option>
+                                <option value="15">15</option>
+                                <option value="30">30</option>
+                                <option value="45">45</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <label for="location" class="required">Location</label>
+                        <input type="text" id="location" required placeholder="Where did it happen?">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="incident-category" class="required">Incident Category</label>
+                        <select id="incident-category" required onchange="updateTypeOptions()">
+                            <option value="">Select category...</option>
+                            <option value="Accident">Accident</option>
+                            <option value="Near Miss">Near Miss</option>
+                            <option value="Information Security Incident">Information Security Incident</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="type" class="required">Type</label>
+                        <select id="type" required onchange="updateSubTypeOptions()">
+                            <option value="">Select type...</option>
+                            <option value="Injury/Illness">Injury/Illness</option>
+                            <option value="Environmental Impact">Environmental Impact</option>
+                            <option value="Equipment/Plant Damage">Equipment/Plant Damage</option>
+                            <option value="Health and Safety">Health and Safety</option>
+                            <option value="Information Security">Information Security</option>
+                            <option value="Quality">Quality</option>
+                            <option value="Transport">Transport</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sub-type" class="required">Sub-type</label>
+                    <select id="sub-type" required>
+                        <option value="">Select sub-type...</option>
+                        <option value="Abrasion">Abrasion</option>
+                        <option value="Amputation">Amputation</option>
+                        <option value="Bruise">Bruise</option>
+                        <option value="Burn">Burn</option>
+                        <option value="Crush">Crush</option>
+                        <option value="Cut">Cut</option>
+                        <option value="Dislocation">Dislocation</option>
+                        <option value="Distress">Distress</option>
+                        <option value="Fever">Fever</option>
+                        <option value="Fracture">Fracture</option>
+                        <option value="Infection">Infection</option>
+                        <option value="Internal">Internal</option>
+                        <option value="Loss of Consciousness">Loss of Consciousness</option>
+                        <option value="Loss of Hearing">Loss of Hearing</option>
+                        <option value="Loss of Sight">Loss of Sight</option>
+                        <option value="Muscle Strain">Muscle Strain</option>
+                        <option value="Puncture">Puncture</option>
+                        <option value="Scald">Scald</option>
+                        <option value="Skin Reaction">Skin Reaction</option>
+                        <option value="Sprain">Sprain</option>
+                        <option value="Swelling">Swelling</option>
+                        <option value="Unable to Sleep">Unable to Sleep</option>
+                        <option value="Vomiting">Vomiting</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="person-type" class="required">Person Type</label>
+                        <select id="person-type" required>
+                            <option value="">Select person type...</option>
+                            <option value="Employee">Employee</option>
+                            <option value="Contractor">Contractor</option>
+                            <option value="Visitor">Visitor</option>
+                            <option value="Public">Public</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="person-name" class="required">Name Of Person</label>
+                        <input type="text" id="person-name" required placeholder="Full name">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="incident-site">Incident Site</label>
+                    <input type="text" id="incident-site" placeholder="Specific area or department">
+                </div>
+                
+                <div class="form-group">
+                    <label for="incident-description" class="required">Incident Description</label>
+                    <textarea id="incident-description" required placeholder="Provide a detailed description of what happened..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="investigator">Investigator</label>
+                        <input type="text" id="investigator" placeholder="Person responsible for investigation">
+                    </div>
+                    <div class="form-col">
+                        <label for="target-date" class="required">Target Date</label>
+                        <input type="date" id="target-date" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="investigation-results">Investigation Results</label>
+                    <textarea id="investigation-results" placeholder="Findings from the investigation..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="severity" class="required">Severity</label>
+                        <select id="severity" required>
+                            <option value="">Select severity...</option>
+                            <option value="Minor">Minor</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Major">Major</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="likely-recurrence">Likely Recurrence</label>
+                        <select id="likely-recurrence">
+                            <option value="n/a">n/a</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="primary-cause">Primary Cause</label>
+                        <select id="primary-cause">
+                            <option value="n/a">n/a</option>
+                            <option value="Loss of Concentration">Loss of Concentration</option>
+                            <option value="Equipment Failure">Equipment Failure</option>
+                            <option value="Human Error">Human Error</option>
+                            <option value="Environmental Conditions">Environmental Conditions</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="secondary-cause">Secondary Cause</label>
+                        <select id="secondary-cause">
+                            <option value="n/a">n/a</option>
+                            <option value="Procedure/System of Work">Procedure/System of Work</option>
+                            <option value="Lack of Training">Lack of Training</option>
+                            <option value="Equipment Design">Equipment Design</option>
+                            <option value="Fatigue">Fatigue</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="hazard-type">Hazard Type</label>
+                        <select id="hazard-type">
+                            <option value="n/a">n/a</option>
+                            <option value="Access">Access</option>
+                            <option value="Chemical">Chemical</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="Fall">Fall</option>
+                            <option value="Manual Handling">Manual Handling</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="hazard-source">Hazard Source</label>
+                        <select id="hazard-source">
+                            <option value="n/a">n/a</option>
+                            <option value="Access/Egress Equipment">Access/Egress Equipment</option>
+                            <option value="Machinery">Machinery</option>
+                            <option value="Tools">Tools</option>
+                            <option value="Environment">Environment</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reportable" class="required">Reportable?</label>
+                    <select id="reportable" required>
+                        <option value="">Select...</option>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Agencies Notified</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="agency-ea"> <label for="agency-ea">EA</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="agency-eho"> <label for="agency-eho">EHO</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="agency-hse"> <label for="agency-hse">HSE</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="agency-local"> <label for="agency-local">Local Authority</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Emergency Services Attending</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="service-ambulance"> <label for="service-ambulance">Ambulance</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="service-fire"> <label for="service-fire">Fire</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="service-police"> <label for="service-police">Police</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="risk-assessment" class="required">Risk Assessment Review Completed?</label>
+                        <select id="risk-assessment" required>
+                            <option value="">Select...</option>
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="assessment-date">Dated</label>
+                        <input type="date" id="assessment-date">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="assessment-no">Assessment No</label>
+                    <input type="text" id="assessment-no" placeholder="Reference number">
+                </div>
+            </div>
+            
+            <!-- Witnesses Tab -->
+            <div id="witnesses" class="tab-content">
+                <div class="form-group">
+                    <label for="witness-name">Witness Name</label>
+                    <input type="text" id="witness-name" placeholder="Full name of witness">
+                </div>
+                
+                <div class="form-group">
+                    <label for="witness-contact">Contact Details</label>
+                    <input type="text" id="witness-contact" placeholder="Phone or email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="witness-statement">Statement</label>
+                    <textarea id="witness-statement" placeholder="What did the witness observe?"></textarea>
+                </div>
+                
+                <button type="button" class="submit-btn" onclick="addWitness()">
+                    <i class="fas fa-plus"></i> Add Witness
+                </button>
+                
+                <div id="witnesses-list" class="card-list">
+                    <h3>Witnesses List</h3>
+                    <div id="witness-items"></div>
+                </div>
+            </div>
+            
+            <!-- Photos Tab -->
+            <div id="photos" class="tab-content">
+                <label class="file-upload" for="photo-upload">
+                    <input type="file" id="photo-upload" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+                    <i class="fas fa-camera"></i>
+                    <div class="file-upload-text">
+                        <strong>Click to upload photos</strong> or drag and drop
+                    </div>
+                    <div>JPG, PNG or GIF files</div>
+                </label>
+                
+                <div class="file-preview" id="photo-preview"></div>
+            </div>
+            
+            <!-- Linked Files Tab -->
+            <div id="linked-files" class="tab-content">
+                <div class="form-group">
+                    <label for="linked-file-name">File Name</label>
+                    <input type="text" id="linked-file-name" placeholder="Name of the file">
+                </div>
+                
+                <div class="form-group">
+                    <label for="linked-file-desc">Description</label>
+                    <textarea id="linked-file-desc" placeholder="Brief description of the file"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="linked-file-location">File Location/URL</label>
+                    <input type="text" id="linked-file-location" placeholder="URL or file path">
+                </div>
+                
+                <button type="button" class="submit-btn" onclick="addLinkedFile()">
+                    <i class="fas fa-link"></i> Add Linked File
+                </button>
+                
+                <div id="linked-files-list" class="card-list">
+                    <h3>Linked Files</h3>
+                    <div id="linked-file-items"></div>
+                </div>
+            </div>
+            
+            <!-- Attached Files Tab -->
+            <div id="attached-files" class="tab-content">
+                <label class="file-upload" for="file-upload">
+                    <input type="file" id="file-upload" multiple onchange="handleFileUpload(event)">
+                    <i class="fas fa-file-upload"></i>
+                    <div class="file-upload-text">
+                        <strong>Click to upload files</strong> or drag and drop
+                    </div>
+                    <div>PDF, DOC, XLS, TXT files</div>
+                </label>
+                
+                <div class="file-preview" id="file-preview"></div>
+            </div>
+            
+            <!-- External Resources Tab -->
+            <div id="external-resources" class="tab-content">
+                <div class="form-group">
+                    <label for="resource-name">Resource Name</label>
+                    <input type="text" id="resource-name" placeholder="Name of the resource">
+                </div>
+                
+                <div class="form-group">
+                    <label for="resource-desc">Description</label>
+                    <textarea id="resource-desc" placeholder="Brief description of the resource"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resource-url">URL</label>
+                    <input type="url" id="resource-url" placeholder="https://...">
+                </div>
+                
+                <button type="button" class="submit-btn" onclick="addResource()">
+                    <i class="fas fa-globe"></i> Add External Resource
+                </button>
+                
+                <div id="resources-list" class="card-list">
+                    <h3>External Resources</h3>
+                    <div id="resource-items"></div>
+                </div>
+            </div>
+            
+            <!-- Improvement Logs Tab -->
+            <div id="improvement-logs" class="tab-content">
+                <div class="form-group">
+                    <label for="improvement-desc">Description of Improvement</label>
+                    <textarea id="improvement-desc" placeholder="Describe the improvement"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="improvement-date">Date</label>
+                    <input type="date" id="improvement-date">
+                </div>
+                
+                <div class="form-group">
+                    <label for="improvement-by">Implemented By</label>
+                    <input type="text" id="improvement-by" placeholder="Person responsible">
+                </div>
+                
+                <button type="button" class="submit-btn" onclick="addImprovement()">
+                    <i class="fas fa-chart-line"></i> Add Improvement Log
+                </button>
+                
+                <div id="improvements-list" class="card-list">
+                    <h3>Improvement Logs</h3>
+                    <div id="improvement-items"></div>
+                </div>
+            </div>
+        </form>
+        
+        <div class="floating-action">
+            <button type="button" onclick="document.getElementById('incident-form').requestSubmit()" class="fab">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        <div>
+            <i class="fas fa-check-circle"></i>
+            <span id="notification-message"></span>
+        </div>
+        <button class="notification-close" onclick="closeNotification()">×</button>
+    </div>
+    
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <script>
+        // Tab functionality
+        function openTab(evt, tabName) {
+            let i, tabContent, tabLinks;
+            
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].style.display = "none";
+            }
+            
+            tabLinks = document.getElementsByClassName("tab");
+            for (i = 0; i < tabLinks.length; i++) {
+                tabLinks[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.classList.add("active");
+            
+            // Update progress
+            updateProgress();
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const form = document.getElementById('incident-form');
+            const requiredFields = form.querySelectorAll('[required]');
+            const filledFields = Array.from(requiredFields).filter(field => field.value.trim() !== '');
+            const progress = Math.round((filledFields.length / requiredFields.length) * 100);
+            
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-percentage').textContent = `${progress}%`;
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            notification.className = 'notification';
+            if (type !== 'success') {
+                notification.classList.add(type);
+            }
+            
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                closeNotification();
+            }, 3000);
+        }
+        
+        // Close notification
+        function closeNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.remove('show');
+        }
+        
+        // Show loading spinner
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('show');
+        }
+        
+        // Hide loading spinner
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('show');
+        }
+        
+        // Update type options based on incident category
+        function updateTypeOptions() {
+            const category = document.getElementById('incident-category').value;
+            const typeSelect = document.getElementById('type');
+            
+            // Clear current options
+            typeSelect.innerHTML = '<option value="">Select type...</option>';
+            
+            // Add options based on category
+            if (category === 'Accident') {
+                const options = [
+                    'Injury/Illness',
+                    'Environmental Impact',
+                    'Equipment/Plant Damage',
+                    'Health and Safety'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    typeSelect.appendChild(optionElement);
+                });
+            } else if (category === 'Near Miss') {
+                const options = [
+                    'Health and Safety',
+                    'Environmental Impact',
+                    'Equipment/Plant Damage',
+                    'Quality',
+                    'Transport'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    typeSelect.appendChild(optionElement);
+                });
+            } else if (category === 'Information Security Incident') {
+                const options = [
+                    'Information Security',
+                    'Quality'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    typeSelect.appendChild(optionElement);
+                });
+            }
+            
+            // Trigger the sub-type update
+            updateSubTypeOptions();
+        }
+        
+        // Update sub-type options based on type
+        function updateSubTypeOptions() {
+            const type = document.getElementById('type').value;
+            const subTypeSelect = document.getElementById('sub-type');
+            
+            // Clear current options
+            subTypeSelect.innerHTML = '<option value="">Select sub-type...</option>';
+            
+            // Add options based on type
+            if (type === 'Injury/Illness') {
+                const options = [
+                    'Abrasion',
+                    'Amputation',
+                    'Bruise',
+                    'Burn',
+                    'Crush',
+                    'Cut',
+                    'Dislocation',
+                    'Distress',
+                    'Fever',
+                    'Fracture',
+                    'Infection',
+                    'Internal',
+                    'Loss of Consciousness',
+                    'Loss of Hearing',
+                    'Loss of Sight',
+                    'Muscle Strain',
+                    'Puncture',
+                    'Scald',
+                    'Skin Reaction',
+                    'Sprain',
+                    'Swelling',
+                    'Unable to Sleep',
+                    'Vomiting'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    subTypeSelect.appendChild(optionElement);
+                });
+            } else if (type === 'Environmental Impact') {
+                const options = [
+                    'Air Pollution',
+                    'Land Contamination',
+                    'Noise Pollution',
+                    'Waste Management',
+                    'Water Pollution'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    subTypeSelect.appendChild(optionElement);
+                });
+            } else if (type === 'Equipment/Plant Damage') {
+                const options = [
+                    'Electrical',
+                    'Mechanical',
+                    'Structural',
+                    'Vehicle'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    subTypeSelect.appendChild(optionElement);
+                });
+            } else if (type === 'Information Security') {
+                const options = [
+                    'Data Breach',
+                    'Phishing',
+                    'Unauthorized Access',
+                    'System Outage'
+                ];
+                
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    subTypeSelect.appendChild(optionElement);
+                });
+            }
+        }
+        
+        // Photo upload handling
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('photo-preview');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Create a file reader to preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.dataset.fileName = file.name;
+                    fileItem.dataset.fileType = file.type;
+                    fileItem.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}" style="width: 100%; max-height: 80px; object-fit: contain;">
+                        <div class="file-name">${file.name}</div>
+                        <div class="remove-file" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></div>
+                    `;
+                    preview.appendChild(fileItem);
+                    
+                    // Update progress
+                    updateProgress();
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            if (files.length > 0) {
+                showNotification(`${files.length} photo${files.length > 1 ? 's' : ''} uploaded successfully`);
+            }
+        }
+        
+        // File upload handling
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('file-preview');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.dataset.fileName = file.name;
+                fileItem.dataset.fileType = file.type;
+                
+                let fileIcon = 'fas fa-file';
+                const extension = file.name.split('.').pop().toLowerCase();
+                
+                if (['pdf'].includes(extension)) {
+                    fileIcon = 'fas fa-file-pdf';
+                } else if (['doc', 'docx'].includes(extension)) {
+                    fileIcon = 'fas fa-file-word';
+                } else if (['xls', 'xlsx'].includes(extension)) {
+                    fileIcon = 'fas fa-file-excel';
+                } else if (['ppt', 'pptx'].includes(extension)) {
+                    fileIcon = 'fas fa-file-powerpoint';
+                } else if (['zip', 'rar', '7z'].includes(extension)) {
+                    fileIcon = 'fas fa-file-archive';
+                } else if (['txt', 'rtf'].includes(extension)) {
+                    fileIcon = 'fas fa-file-alt';
+                }
+                
+                fileItem.innerHTML = `
+                    <div class="file-icon"><i class="${fileIcon}"></i></div>
+                    <div class="file-name">${file.name}</div>
+                    <div class="remove-file" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></div>
+                `;
+                preview.appendChild(fileItem);
+            }
+            
+            if (files.length > 0) {
+                showNotification(`${files.length} file${files.length > 1 ? 's' : ''} uploaded successfully`);
+                
+                // Update progress
+                updateProgress();
+            }
+        }
+        
+        // Add witness functionality
+        function addWitness() {
+            const name = document.getElementById('witness-name').value;
+            const contact = document.getElementById('witness-contact').value;
+            const statement = document.getElementById('witness-statement').value;
+            
+            if (name && statement) {
+                const witnessList = document.getElementById('witness-items');
+                const witnessItem = document.createElement('div');
+                witnessItem.className = 'card-item';
+                witnessItem.innerHTML = `
+                    <div class="card-item-header">
+                        <div class="card-item-title">${name}</div>
+                        <div>${contact}</div>
+                    </div>
+                    <div class="card-item-content">${statement}</div>
+                    <div class="card-item-actions">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </div>
+                `;
+                witnessList.appendChild(witnessItem);
+                
+                // Clear inputs
+                document.getElementById('witness-name').value = '';
+                document.getElementById('witness-contact').value = '';
+                document.getElementById('witness-statement').value = '';
+                
+                showNotification('Witness added successfully');
+                
+                // Update progress
+                updateProgress();
+            } else {
+                showNotification('Please provide at least a name and statement for the witness', 'warning');
+            }
+        }
+        
+        // Add linked file functionality
+        function addLinkedFile() {
+            const name = document.getElementById('linked-file-name').value;
+            const desc = document.getElementById('linked-file-desc').value;
+            const location = document.getElementById('linked-file-location').value;
+            
+            if (name && location) {
+                const filesList = document.getElementById('linked-file-items');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'card-item';
+                fileItem.innerHTML = `
+                    <div class="card-item-header">
+                        <div class="card-item-title">${name}</div>
+                    </div>
+                    ${desc ? `<div class="card-item-content">${desc}</div>` : ''}
+                    <div class="card-item-content">
+                        <a href="${location}" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> ${location}
+                        </a>
+                    </div>
+                    <div class="card-item-actions">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </div>
+                `;
+                filesList.appendChild(fileItem);
+                
+                // Clear inputs
+                document.getElementById('linked-file-name').value = '';
+                document.getElementById('linked-file-desc').value = '';
+                document.getElementById('linked-file-location').value = '';
+                
+                showNotification('Linked file added successfully');
+                
+                // Update progress
+                updateProgress();
+            } else {
+                showNotification('Please provide at least a name and location for the linked file', 'warning');
+            }
+        }
+        
+        // Add external resource functionality
+        function addResource() {
+            const name = document.getElementById('resource-name').value;
+            const desc = document.getElementById('resource-desc').value;
+            const url = document.getElementById('resource-url').value;
+            
+            if (name && url) {
+                const resourcesList = document.getElementById('resource-items');
+                const resourceItem = document.createElement('div');
+                resourceItem.className = 'card-item';
+                resourceItem.innerHTML = `
+                    <div class="card-item-header">
+                        <div class="card-item-title">${name}</div>
+                    </div>
+                    ${desc ? `<div class="card-item-content">${desc}</div>` : ''}
+                    <div class="card-item-content">
+                        <a href="${url}" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> ${url}
+                        </a>
+                    </div>
+                    <div class="card-item-actions">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </div>
+                `;
+                resourcesList.appendChild(resourceItem);
+                
+                // Clear inputs
+                document.getElementById('resource-name').value = '';
+                document.getElementById('resource-desc').value = '';
+                document.getElementById('resource-url').value = '';
+                
+                showNotification('External resource added successfully');
+                
+                // Update progress
+                updateProgress();
+            } else {
+                showNotification('Please provide at least a name and URL for the external resource', 'warning');
+            }
+        }
+        
+        // Add improvement log functionality
+        function addImprovement() {
+            const desc = document.getElementById('improvement-desc').value;
+            const date = document.getElementById('improvement-date').value;
+            const by = document.getElementById('improvement-by').value;
+            
+            if (desc && date) {
+                const improvementsList = document.getElementById('improvement-items');
+                const improvementItem = document.createElement('div');
+                improvementItem.className = 'card-item';
+                improvementItem.innerHTML = `
+                    <div class="card-item-header">
+                        <div class="card-item-title">${date}</div>
+                        <div>By: ${by || 'Unknown'}</div>
+                    </div>
+                    <div class="card-item-content">${desc}</div>
+                    <div class="card-item-actions">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </div>
+                `;
+                improvementsList.appendChild(improvementItem);
+                
+                // Clear inputs
+                document.getElementById('improvement-desc').value = '';
+                document.getElementById('improvement-date').value = '';
+                document.getElementById('improvement-by').value = '';
+                
+                showNotification('Improvement log added successfully');
+                
+                // Update progress
+                updateProgress();
+            } else {
+                showNotification('Please provide at least a description and date for the improvement log', 'warning');
+            }
+        }
+        
+        // Form submission
+        async function submitForm(event) {
+            event.preventDefault();
+            
+            // Show loading overlay
+            showLoading();
+            
+            try {
+                // Collect form data
+                const formData = new FormData();
+                
+                // Add basic form fields
+                const form = document.getElementById('incident-form');
+                const inputs = form.querySelectorAll('input:not([type="file"]), select, textarea');
+                
+                inputs.forEach(input => {
+                    if (input.type === 'checkbox') {
+                        formData.append(input.id, input.checked);
+                    } else {
+                        formData.append(input.id, input.value);
+                    }
+                });
+                
+                // Add witnesses
+                const witnessItems = document.querySelectorAll('#witness-items .card-item');
+                let witnesses = [];
+                
+                witnessItems.forEach((item, index) => {
+                    const name = item.querySelector('.card-item-title').textContent;
+                    const contact = item.querySelector('.card-item-header div:last-child').textContent;
+                    const statement = item.querySelector('.card-item-content').textContent;
+                    
+                    witnesses.push({
+                        name,
+                        contact,
+                        statement
+                    });
+                });
+                
+                formData.append('witnesses', JSON.stringify(witnesses));
+                
+                // Add linked files
+                const linkedFileItems = document.querySelectorAll('#linked-file-items .card-item');
+                let linkedFiles = [];
+                
+                linkedFileItems.forEach((item, index) => {
+                    const name = item.querySelector('.card-item-title').textContent;
+                    const desc = item.querySelectorAll('.card-item-content')[0]?.textContent || '';
+                    const location = item.querySelector('a').getAttribute('href');
+                    
+                    linkedFiles.push({
+                        name,
+                        desc,
+                        location
+                    });
+                });
+                
+                formData.append('linkedFiles', JSON.stringify(linkedFiles));
+                
+                // Add external resources
+                const resourceItems = document.querySelectorAll('#resource-items .card-item');
+                let resources = [];
+                
+                resourceItems.forEach((item, index) => {
+                    const name = item.querySelector('.card-item-title').textContent;
+                    const desc = item.querySelectorAll('.card-item-content')[0]?.textContent || '';
+                    const url = item.querySelector('a').getAttribute('href');
+                    
+                    resources.push({
+                        name,
+                        desc,
+                        url
+                    });
+                });
+                
+                formData.append('resources', JSON.stringify(resources));
+                
+                // Add improvement logs
+                const improvementItems = document.querySelectorAll('#improvement-items .card-item');
+                let improvements = [];
+                
+                improvementItems.forEach((item, index) => {
+                    const date = item.querySelector('.card-item-title').textContent;
+                    const by = item.querySelector('.card-item-header div:last-child').textContent.replace('By: ', '');
+                    const desc = item.querySelector('.card-item-content').textContent;
+                    
+                    improvements.push({
+                        date,
+                        by,
+                        desc
+                    });
+                });
+                
+                formData.append('improvements', JSON.stringify(improvements));
+                
+                // Add photos
+                const photoItems = document.querySelectorAll('#photo-preview .file-item');
+                
+                for (let i = 0; i < photoItems.length; i++) {
+                    const item = photoItems[i];
+                    const fileName = item.dataset.fileName;
+                    const imgSrc = item.querySelector('img').src;
+                    
+                    // Convert data URL to blob
+                    const res = await fetch(imgSrc);
+                    const blob = await res.blob();
+                    
+                    formData.append(`photo_${i}`, blob, fileName);
+                }
+                
+                // Add attached files
+                const fileItems = document.querySelectorAll('#file-preview .file-item');
+                
+                for (let i = 0; i < fileItems.length; i++) {
+                    const item = fileItems[i];
+                    const fileName = item.dataset.fileName;
+                    
+                    // In a real implementation, you would get the actual file here
+                    // For demonstration purposes, we're just adding placeholders
+                    formData.append(`file_${i}`, new Blob(['file content']), fileName);
+                }
+                
+                // In a real implementation, you would send the form data to your server or Power Automate flow
+                // For this demo, we'll simulate a successful submission
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Hide loading overlay
+                hideLoading();
+                
+                // Show success notification
+                showNotification('Incident report submitted successfully!');
+                
+                // Reset form
+                form.reset();
+                
+                // Clear file previews
+                document.getElementById('photo-preview').innerHTML = '';
+                document.getElementById('file-preview').innerHTML = '';
+                document.getElementById('witness-items').innerHTML = '';
+                document.getElementById('linked-file-items').innerHTML = '';
+                document.getElementById('resource-items').innerHTML = '';
+                document.getElementById('improvement-items').innerHTML = '';
+                
+                // Set default dates
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('incident-date').value = today;
+                
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() + 7);
+                document.getElementById('target-date').value = targetDate.toISOString().split('T')[0];
+                
+                // Update progress
+                updateProgress();
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+                
+                // Navigate to details tab
+                openTab({ currentTarget: document.querySelector('.tab') }, 'details');
+            } catch (error) {
+                // Hide loading overlay
+                hideLoading();
+                
+                // Show error notification
+                showNotification('Error submitting form: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+        
+        // Register service worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+            });
+        }
+        
+        // Set up event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date as default for date fields
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('incident-date').value = today;
+            
+            // Set target date default (7 days from now)
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 7);
+            document.getElementById('target-date').value = targetDate.toISOString().split('T')[0];
+            
+            // Add event listeners to track form progress
+            const formInputs = document.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('change', updateProgress);
+                input.addEventListener('input', updateProgress);
+            });
+            
+            // Initial progress update
+            updateProgress();
+        });
+    </script>
+</body>
+</html>
